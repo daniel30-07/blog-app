@@ -1,8 +1,9 @@
 const express = require("express"),
+    methodOverride = require("method-override"),
     mongoose = require("mongoose"),
     bodyParser = require("body-parser"),
     app = express();
-
+     
 mongoose.connect('mongodb://localhost:27017/restful_blog_app', {
     useNewUrlParser: true,
     useUnifiedTopology: true
@@ -14,6 +15,7 @@ mongoose.connect('mongodb://localhost:27017/restful_blog_app', {
 app.set("view engine", "ejs");
 app.use(express.static("public"));
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(methodOverride("_method"));
 
 //MONGOOSE/MODEL CONFIG
 const blogSchema = new mongoose.Schema({
@@ -60,6 +62,38 @@ app.get("/blogs/:id", (req, res) => {
         .catch((error) => res.redirect("/blogs"))
 })
 
+// EDIT ROUTE
+app.get("/blogs/:id/edit", (req, res) => {
+    Blog.findById(req.params.id)
+        .then((foundBlog) => {
+            res.render("edit", {blog: foundBlog})
+        })
+        .catch((error) => {
+            res.redirect("/blogs");
+        })        
+})
+
+// UPDATE ROUTE
+app.put("/blogs/:id", (req, res) => {
+    Blog.findByIdAndUpdate(req.params.id, req.body.blog)
+        .then((updatedBlog) => {
+            res.redirect("/blogs/" + req.params.id)
+        })
+        .catch(error => {
+            res.redirect("/blogs")
+        })
+})
+
+// DELETE ROUTE
+app.delete("/blogs/:id", (req, res) => {
+    Blog.findByIdAndRemove(req.params.id)
+        .then(() => {
+            res.redirect("/blogs")
+        })
+        .catch((error) => {
+            res.redirect("/blogs")
+        })
+})
 // Tell Express to listen for request (start server)
 app.listen(8080, () => console.log("Server has started!"));
 
